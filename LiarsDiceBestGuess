@@ -1,0 +1,139 @@
+import java.util.Scanner;
+import java.util.Random;
+import java.util.HashMap;
+
+public class DerryChineseGame3{
+
+    public static void main(String [] args){
+        Scanner sc = new Scanner(System.in);
+
+        // int numPlayers = Integer.parseInt(sc.nextLine());  // uncomment this to take input from user
+        int numPlayers = 5; 
+
+        // String [] dice = sc.nextLine().split(" "); // uncomment this to take input from user 
+       
+        String [] dice = getRandomRoll();
+
+        // gets map of occurences of each face, taking into account the wild card
+        int wild = 1; // can represent every face
+        HashMap<Integer, Integer> faceMap = getFaceMap(dice, wild);
+
+
+        // settings for our monte carlo sim
+        Random rand = new Random();
+        int rolls = (numPlayers - 1) * 5;
+        int monte = 500000;
+        
+        // gets most frequent face in our roll (if there is a draw it returns the first one)
+        int face = getMostFrequentFace(faceMap);
+        int numTimes = faceMap.get(face);
+        int newNumTimes = 1; // this effectively starts the bid at:(the number of times the highest occuring face in our hand appears + 1)
+
+        // debugging
+        System.out.println("Most frequent face in your roll: " + face + ", occurs: " + numTimes + " times");
+
+        // we calculate the probability of the finding the bid, and then keep on adding to the bid until we drop below 50%
+       double answer = 100.0;
+        while (true) {
+            
+            // runs monte carlo sim
+            int totalOccurances = 0;
+            for(int i=0; i < monte; i++){
+                int countFaces = 0;
+
+                // rolls all the dice for this iteration of the sim
+                for(int j=0; j<rolls; j++){
+                    int tempFace = rand.nextInt(6) + 1;
+                    if(tempFace == face || tempFace == wild){
+                        countFaces++;
+                    }
+                }
+
+                // checks if we have surpassed the number of new nums required
+                if(countFaces >= newNumTimes){
+                    totalOccurances++;
+                }
+            }
+
+            // gets the percentage
+            answer = ((double)totalOccurances/(double)monte) * 100;
+
+            // break if we dipped below 50.0, otherwise add to new num times for next simulation (in effect, increasing the bid)
+            if (answer < 50.0) {
+                break;
+            } else {
+                newNumTimes += 1;                  
+            }
+       }
+
+       // get the final num for occurences for the bid, we subtract 1 since the loop didn't exit until we dipped below 50.0
+       int finalNumTimes = (numTimes + newNumTimes) - 1;
+
+      
+       System.out.println(finalNumTimes + " " + face);
+    }
+
+    // a map giving the freqency of each face in the roll, accounts for the wild card
+    public static HashMap<Integer, Integer> getFaceMap(String [] dice, int wild) {
+        int numberOfWilds = 0;
+
+        HashMap<Integer, Integer> faceMap = new HashMap<Integer, Integer>();
+
+        for(int i = 0; i < dice.length; i++){
+            int temp = Integer.parseInt(dice[i]);
+
+            
+            if (faceMap.containsKey(temp)) {
+                // if we've seen it before, increment it
+                faceMap.put(temp, faceMap.get(temp) + 1);
+            } else {
+                // if we've not seen it before, add to map with value of one
+                faceMap.put(temp, 1);
+            }
+
+            // keeps track of the number of wild cards
+            if(temp == wild) {
+                numberOfWilds += 1;
+            }
+        }   
+
+        // increments all the other numbers in the roll apart from the wild card
+        for(int key: faceMap.keySet()){
+            if (key != wild) {
+                faceMap.put(key, faceMap.get(key) + numberOfWilds);
+            } 
+        }
+        return faceMap;
+    }
+
+    // returns the face which occured most frequent in the roll
+    public static int getMostFrequentFace(HashMap<Integer, Integer> faceMap) {
+        int mostFrequentFace = -1;
+
+        for(int key: faceMap.keySet()){
+            if(mostFrequentFace == -1){
+                mostFrequentFace = key;
+            } else if (faceMap.get(mostFrequentFace) <= faceMap.get(key)) {
+
+                mostFrequentFace = key;
+            }
+        }
+
+        int temp =faceMap.get(mostFrequentFace);
+        for(int i =0; faceMap)
+        return mostFrequentFace;
+    }    
+
+ 
+    
+    // for debugging
+    public static String [] getRandomRoll() {
+        String [] dice = new String[5];
+        Random rand = new Random();
+
+        for(int i = 0; i < 5; i++){
+            dice[i] = Integer.toString(rand.nextInt(6) + 1);
+        }
+        return dice;
+    }
+}
